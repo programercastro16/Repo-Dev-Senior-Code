@@ -1,25 +1,36 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+type CrearProductoInput = {
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+  stock: number;
+  categoriaId: number;
+};
 
 @Injectable()
 export class ProductosService {
-  private productos = [
-    { id: 1, nombre: 'Teclado mecánico', precio: 120000, stock: 15 },
-    { id: 2, nombre: 'Mouse inalámbrico', precio: 45000, stock: 30 },
-     { id: 3, nombre: 'Pantalla', precio: 1000000, stock: 5 },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
-  obtenerTodos() {
-    return this.productos;
+  crear(datos: CrearProductoInput) {
+    return this.prisma.producto.create({
+      data: datos,
+      include: { categoria: true },
+    });
   }
 
-  crear(nuevo: { nombre: string; precio: number; stock: number }) {
-    const producto = {
-      id: this.productos.length + 1,
-      nombre: nuevo.nombre,
-      precio: nuevo.precio,
-      stock: nuevo.stock,
-    };
-    this.productos.push(producto);
-    return producto;
+  obtenerTodos() {
+    return this.prisma.producto.findMany({
+      include: { categoria: true },
+      orderBy: { id: 'asc' },
+    });
+  }
+
+  obtenerPorId(id: number) {
+    return this.prisma.producto.findUnique({
+      where: { id },
+      include: { categoria: true },
+    });
   }
 }

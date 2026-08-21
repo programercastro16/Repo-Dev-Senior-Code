@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  PAGADO
+  ENVIADO
+  ENTREGADO
+  CANCELADO
+}
+
+model Usuario {
+  id       Int      @id @default(autoincrement())
+  nombre   String
+  email    String   @unique
+  creadoEn DateTime @default(now())
+  pedidos  Pedido[]
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id        Int        @id @default(autoincrement())
+  nombre    String     @unique
+  creadoEn  DateTime   @default(now())
+  productos Producto[]
+
+  @@map("categorias")
+}
+
+model Producto {
+  id            Int             @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  precio        Decimal         @db.Decimal(12, 2)
+  stock         Int             @default(0)
+  categoriaId   Int
+  creadoEn      DateTime        @default(now())
+  actualizadoEn DateTime        @updatedAt
+  categoria     Categoria       @relation(fields: [categoriaId], references: [id])
+  detalles      DetallePedido[]
+
+  @@index([categoriaId])
+  @@map("productos")
+}
+
+model Pedido {
+  id        Int             @id @default(autoincrement())
+  estado    EstadoPedido    @default(PENDIENTE)
+  total     Decimal         @db.Decimal(12, 2)
+  usuarioId Int
+  creadoEn  DateTime        @default(now())
+  usuario   Usuario         @relation(fields: [usuarioId], references: [id])
+  detalles  DetallePedido[]
+
+  @@index([usuarioId])
+  @@map("pedidos")
+}
+
+model DetallePedido {
+  id             Int      @id @default(autoincrement())
+  cantidad       Int
+  precioUnitario Decimal  @db.Decimal(12, 2)
+  pedidoId       Int
+  productoId     Int
+  pedido         Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto       Producto @relation(fields: [productoId], references: [id])
+
+  @@unique([pedidoId, productoId])
+  @@index([productoId])
+  @@map("detalles_pedido")
+}
