@@ -9,9 +9,17 @@ type CrearProductoInput = {
   categoriaId: number;
 };
 
+type ActualizarProductoInput = {
+  nombre?: string;
+  descripcion?: string;
+  precio?: number;
+  stock?: number;
+  categoriaId?: number;
+};
+
 @Injectable()
 export class ProductosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   crear(datos: CrearProductoInput) {
     return this.prisma.producto.create({
@@ -31,6 +39,20 @@ export class ProductosService {
     return this.prisma.producto.findUnique({
       where: { id },
       include: { categoria: true },
+    });
+  }
+
+  actualizar(id: number, datos: ActualizarProductoInput) {
+    return this.prisma.producto.update({
+      where: { id },
+      data: datos,
+      include: { categoria: true },
+    });
+  }
+
+  eliminar(id: number) {
+    return this.prisma.producto.delete({
+      where: { id },
     });
   }
 }
